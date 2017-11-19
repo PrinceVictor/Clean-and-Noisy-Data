@@ -9,9 +9,9 @@ N =length(y);
 for i = 1: N
     f(i,1) = ((i-1)*fs)/N ;
 end
-for i = 251: 256
-    y(i,1) = 0;
-end
+% for i = 251: 256
+%     y(i,1) = 0;
+% end
 subplot(2,1,1);plot(f(1:(N+1)/2),y1Rfft(1:(N+1)/2));
 % set(gca,'xtick',[0:1000:N]);
 % subplot(2,1,2);plot(f(1:(N+1)/2),yRfft(1:(N+1)/2));
