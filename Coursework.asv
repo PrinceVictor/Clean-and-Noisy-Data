@@ -6,10 +6,14 @@ y1fft = fft(y1);
 % yRfft = abs(yfft);
 y1Rfft = abs(y1fft);
 N =length(y);
-
+p_last = 5;
+% Q = 0.75;
+R = 2;
+Q = 0.5;
+x_last =0;
 for i = 1: N
     f(i,1) = ((i-1)*fs)/N ;
-    
+    error(i,:) = y(i)- y1(i);
 end
 % Q = std(error,1,1);
 
@@ -59,38 +63,27 @@ process5 = filter(h4, 1, process4);
 % %    freqz(h3,1);
 % process6 = medfilt1(process5,9);
 
-% for i = 1: (N-130000)
-%   
-%     error(i,:) = process5(i)- y1(i+13000);
-% end
-
-% subplot(3,1,1);plot(process5);
-% % subplot(3,1,2);plot(error);
-% subplot(3,1,3);plot(y1);
-% process5fft = abs(fft(process5));
-% subplot(5,1,4);plot(f(1:(N+1)/2),process5fft(1:(N+1)/2));
-% subplot(5,1,5);plot(f(1:(N+1)/2),y1Rfft(1:(N+1)/2));
+subplot(5,1,1);plot(process5);
+subplot(5,1,2);plot(process6);
+subplot(5,1,3);plot(y1);
+process6fft = abs(fft(process6));
+subplot(5,1,4);plot(f(1:(N+1)/2),process6fft(1:(N+1)/2));
+subplot(5,1,5);plot(f(1:(N+1)/2),y1Rfft(1:(N+1)/2));
 
 % 
-p_last = 1;
-% Q = 0.75;
-R = 10;
-Q = 0;
-x_last =1;
-for k = 1:N
-   x_mid = x_last;
-   p_mid = p_last + Q;
-   kg = p_mid/(p_mid+Q);
-   x_now = x_mid+ kg*(process5(k)- x_mid);
-   p_now = (1-kg)*p_mid;
-   x_last = x_now;
-   X(k,:) = x_now;
-   delat(k,:) = process5(k) -X(k,:) ;
-end
-subplot(3,1,1);plot(process5);
-subplot(3,1,2);plot(X);
-subplot(3,1,3);plot(y1);
-% plot(delat);
+% for k = 55000:N
+%    x_mid = x_last;
+%    p_mid = p_last + Q;
+%    kg = p_mid/(p_mid+Q);
+%    x_now = x_mid+ kg*(process5(k)- x_mid);
+%    p_now = (1-kg)*p_mid;
+%    x_last = x_now;
+%    X(k,:) = x_now;
+% end
+% subplot(3,1,1);plot(process5);
+% subplot(3,1,2);plot(X);
+% subplot(3,1,3);plot(y1);
+
 
 
 
