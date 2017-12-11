@@ -1,23 +1,52 @@
 % 系统辨识
-clc ; clear ; close all;
+clc ; clear ; 
 
-x = normrnd(0,1,1,500); % input x(n)
-b = fir1(31,0.05);      % fir filter coeff
-d = filter(b,1,x);      % output d(n)
+% wienner filtering
+[y, fs] = audioread('corrupt1718.m4a');
+[y1, fs] = audioread('H64DSP1718.m4a');
+y1(:,2) = [];
+N =length(y);
+for i = 1: N
+    f(i,:) = ((i-1)*fs)/N ;  
+    nosie(i,:) = y(i) - y1(i);
+end
+clc ; clear ; 
+% figure; plot(y1);
+% figure; plot(y);
+% figure; plot(nosie);
 
-figure;    freqz(b);    title('未知系统幅频/相频特性')
-figure;    plot(abs(fftshift(fft(x))));    title('输入信号x(n)')
-figure;    plot(abs(fftshift(fft(d))));    title('未知系统输出d(n)')
+% 
+% nosiefft = abs(fft(nosie));
+% yfft = abs(fft(y1));
+% Hf = yfft.^2 ./ (yfft.^2 + nosiefft.^2);
+% figure; plot(Hf);
 
-x_in = zeros(32,500); % delay  0 to 31    filter order = 31
-for k = 1:1:32
-    x_in(k,:) = [zeros(1,k-1)  x(1:500-k+1)];
+sd = input(' Noise standard deviation: ');
+mu = input(' mu: ');
+ordr = input(' number of weights: ');
+
+for i=1:1000
+    d(i)=sin(2*pi*0.06*(i-1))+sd*randn;
+    x(i)=2*cos(2*pi*0.06*(i-1));
 end
 
-R_xx = x_in*x_in'/500;
-R_dx = d*x_in'/500;
-w = inv(R_xx)*R_dx.';
-y = w'*x_in;
+W=zeros(1,ordr); % initialisation of weights to zero
+e=zeros(1,length(x));
+for k=ordr:length(x)    
+    Xk=x(k-ordr+1:k);
+    e(k)=d(k)-W*Xk';
+    W=W+2*mu*e(k)*Xk;
+end
 
-figure;    plot(abs(fftshift(fft(y))));  title('维纳滤波器输出信号频谱')
-figure;    freqz(w);    title('维纳滤波器幅频/相频特性')
+% plot error signal
+
+figure
+plot(e,'k')
+xlabel(' Sample Number')
+ylabel(' Error d-y')
+
+% Signal = ifft(Hf.* fft(y));
+% figure; plot(Signal);
+% figure; plot(y1);
+% figure; plot(y);
+% figure; plot(nosie);

@@ -1,140 +1,137 @@
-[y, fs] = audioread('corrupt1718.m4a');
-[y1, fs] = audioread('H64DSP1718.m4a');
-% yfft = fft(y);
-y1(:,2) = [];
-y1fft = fft(y1);
-% yRfft = abs(yfft);
-y1Rfft = abs(y1fft);
-N =length(y);
+%Read the data from the file corrupt1718.m4a
+[corruptsignal, fs] = audioread('corrupt1718.m4a');
+N =length(corruptsignal);                     %get the length of the corrputsignal 
+[cleansignal, fs] = audioread('H64DSP1718.m4a');
+cleansignal(:,2) = [];
 
-for i = 1: N
-    f(i,1) = ((i-1)*fs)/N ;
-    
-end
-% Q = std(error,1,1);
-
-% subplot(2,1,1);plot(f(1:(N+1)/2),y1Rfft(1:(N+1)/2));
-% set(gca,'xtick',[0:1000:N]);
-% subplot(2,1,2);plot(f(1:(N+1)/2),yRfft(1:(N+1)/2));
-% yf1 = medfilt1(y,5);
-% fc =1200hz
-% subplot(3,1,1);
-% plot(y);
-process1 = medfilt1(y,5);
-% subplot(3,1,2);
-%  plot(process1);
-%  subplot(3,1,3);
-%  plot(y1);
-
-% % % kalmanfilter
-
-
-
-% process1fft = abs(fft(process1));
-% subplot(2,1,2);plot(f(1:(N+1)/2),process1fft(1:(N+1)/2));
-% subplot(2,1,1);plot(f(1:(N+1)/2),y1Rfft(1:(N+1)/2));
-% Wn1 = roundn((1000*2)/48000,-5);
-% h1 = fir1( 50, Wn1,'low');
-% process2 = filter(h1, 1, process1);
-%  subplot(2,1,2);plot(process2);
-Wn2 = [roundn((980*2)/48000,-5),roundn((1020*2)/48000,-5)];
-order3 = 15000;
-h2 = fir1( order3, Wn2,'stop');
-
-Wn3 = [roundn((1980*2)/48000,-5),roundn((2020*2)/48000,-5)];
-h3 = fir1( order3, Wn3,'stop');
-process3 = filter(h2, 1, process1);
-process4 = filter(h3, 1, process3);
-Wn4 = roundn((1100*2)/48000,-5);
-order = 40;
-h4 = fir1( order, Wn4,'low');
-process5 = filter(h4, 1, process4);
-Wn5= roundn((50*2)/48000,-5);
-order5 = 900;
-h5 = fir1( order5, Wn5,'high');
-process6 = filter(h5, 1, process5);
-order6 = 100;
-Wn6= [roundn((1300*2)/48000,-5),roundn((2000*2)/48000,-5)];
-h6 = fir1( order6, Wn6,'stop');
-process7 = filter(h6, 1, process6);
-order7 = 200;
-Wn7= [roundn((750*2)/48000,-5),roundn((1300*2)/48000,-5)];
-h7 = fir1( order7, Wn7,'stop');
-process8 = filter(h7, 1, process7);
-% 
-% % figure; freqz(h4,1);
-
-
-for i = (order3 + order/2) : N
-    error(i +1 -(order3 + order/2),:) = process5(i) - y1(i +1 -(order3 + order/2));
+% f is frequency correspond to each point
+for p = 1:N
+    t(p,1) = p/fs;
+    f(p,1) = ((p-1)*fs)/N ;  
 end
 
-process9 = medfilt1(process8,9);
+% Median Filter
+processed = medfilt1(corruptsignal,5);
+% figure;
+% subplot(3,1,1);plot(corruptsignal);
+% title('corruptsignal');
+% subplot(3,1,2);plot(processed);
+% title('Siganl processed by Median filter');
+% subplot(3,1,3);plot(cleansignal);
+% title('cleansignal');
 
-% errorfft   = abs(fft(error));
-% Xfft = abs(fft(process9));
-% subplot(5,1,1);plot(process8);
-% subplot(5,1,2);plot(process9);
-% subplot(5,1,3);plot(y1);
-% subplot(5,1,4);plot(f(1:(N+1)/2),Xfft(1:(N+1)/2));
-% subplot(5,1,5);plot(f(1:(N+1)/2),y1Rfft(1:(N+1)/2));
-% sound(process9,fs);
-% figure ; freqz(heroor);
-% figure;freqz(h6,1);
-% sound(process8,fs);
-%  figure; freqz(h1,1);
-% %    freqz(h3,1);
-% process6 = medfilt1(process5,9);
+% FIR filter
+% FIR bandstop1 filter
+order1 = 3000;                                  %order is 3000
+% %frequency from 980hz to 1020hz
+Wn1 = [roundn((980*2)/48000,-5),roundn((1020*2)/48000,-5)];       
+h1 = fir1( order1, Wn1,'stop');
+processed1 = filtfilt(h1, 1, processed);
+% FIR bandstop2 filter
+order2 = 3000;                                  %order is 3000
+% %frequency from 1980hz to 2020hz
+Wn2 = [roundn((1980*2)/48000,-5),roundn((2020*2)/48000,-5)];       
+h2 = fir1( order2, Wn2,'stop');
+processed2 = filtfilt(h2, 1, processed1);
 
-% for i = 1: (N-130000)
-%   
-%     error(i,:) = process5(i)- y1(i+13000);
+% % IIR filter  
+% % if want to run by IIR filter, please comment the FIR bandstop filter above 
+% % IIR filter bandstop1
+% % frequency from 980hz to 1020hz
+% Wn2 = [roundn((980*2)/48000,-3),roundn((1020*2)/48000,-3)];        
+% [B2, A2] = butter(3,Wn2,'stop');
+% processed1 = filter(B2, A2, processed);
+% % IIR filter bandstop2
+% %frequency from 1980hz to 2020hz
+% Wn3 = [roundn((1980*2)/48000,-3),roundn((2020*2)/48000,-3)];       
+% [B3, A3] = butter(3,Wn3,'stop');
+% processed2 = filter(B3, A3, processed1);
+
+% FIR Low pass filter, 
+order3 = 50;                                    %order is 50
+Wn3 = roundn((2000*2)/48000,-5);                %cut off frequency at 2000hz
+h3 = fir1( order3, Wn3,'low');
+processed3 = filtfilt(h3, 1, processed2);
+
+% figure;
+% subplot(2,1,1);plot(processed3);
+% title('Siganl processed by FIR filter');
+% subplot(2,1,2);plot(cleansignal);
+% title('cleansignal');
+
+
+% Kalman Filter
+x_last =0;
+p_last = 0;
+R  = 0.09;
+Q  = 0.005;
+kg = 0;
+for k = 1:N
+   x_mid = x_last;
+   p_mid = p_last + Q;
+   kg = p_mid/(p_mid+R);
+   x_now = x_mid+ kg*(processed3(k)- x_mid);
+   p_now = (1-kg)*p_mid;
+   x_last = x_now;
+   X(k,:) = x_now;
+end
+% figure;
+% subplot(2,1,1);plot(X);
+% title('Siganl processed by Kalman filter');
+% subplot(2,1,2);plot(cleansignal);
+% title('cleansignal');
+% figure; plot(t,cleansignal,t,X);
+
+% Wiener Filter
+% Estimate the noise signal
+noisesignal = X(1:53000);
+for i = 1:3
+noisesignal = [noisesignal ; zeros(40000,1)];
+end
+noisesignal = [noisesignal ;zeros(12000,1); X(185001:235000); X(1:10759)];
+
+nosiefft = abs(fft(noisesignal));
+UnderlySignal  = X - noisesignal;
+sfft = abs(fft(UnderlySignal));
+Hf = sfft.^2 ./ (sfft.^2 + nosiefft.^2);
+Signal = ifft(Hf.* fft(X));
+Signalfft = abs(fft(Signal));
+figure;
+subplot(2,1,1);plot(Signal);
+title('Siganl processed by Kalman filter');
+subplot(2,1,2);plot(cleansignal);
+title('cleansignal');
+figure; plot(t,cleansignal,t,Signal);
+
+% % Adaptive Filter
+% % Estimate the noise signal
+% noisesignal2 = processed3(1:53000);
+% for i = 1:3
+% noisesignal2 = [noisesignal2 ; zeros(40000,1)];
 % end
-
-
-
+% noisesignal2 =[noisesignal2 ;zeros(12000,1); processed3(185001:235000); processed3(1:10759)];
+% x = processed3 - noisesignal2;
 % 
-% p_last = 0;
-% % Q = 0.75;
-% R = 100;
-% Q = 0.5;
-% x_last =0;
-% for k = 1:N
-%    x_mid = x_last;
-%    p_mid = p_last + Q;
-%    kg = p_mid/(p_mid+R);
-%    x_now = x_mid+ kg*(process8(k)- x_mid);
-%    p_now = (1-kg)*p_mid;
-%    x_last = x_now;
-%    X(k,:) = x_now;
+% mu = 0.0015;
+% ordr = 4;
+% W=zeros(1,ordr); % initialisation of weights to zero
+% e=zeros(1,N);
+% u = mean(x.^2);
+% for k=ordr:N   
+%     Xk=x(k-ordr+1:k);
+%     yk(k) = W*Xk;
+%     e(k)=processed3(k)-yk(k);
+%     W=W+2*mu*e(k)*Xk';
 % end
+% subplot(2,1,1);plot(yk);
+% title('Siganl processed by Adaptive filter');
+% subplot(2,1,2);plot(cleansignal);
+% title('cleansignal');
+% figure; plot(t,cleansignal,t,yk);
 
-% plot(delat);
-
-
-subplot(3,1,1);plot(process8);
-subplot(3,1,2);plot(X);
-subplot(3,1,3);plot(y1);
-sound(X,fs);
-% % yfft = abs(fft(y));
-% % Nfft = yfft - Xfft;
-% % Hfft =  abs((Xfft.^Xfft) ./ (Nfft.^Nfft + Xfft.^Xfft) );
-% 
-% 
-% % plot(Hfft);
-% % for i = 1: (N-130000)
-% 
-% % % plot(Ds);
-% % end
-% 
-% % yfftt = fft(y);
-% % Ds = Hfft .* yfftt;
-% % designal = ifft(Ds);
-% % figure;plot(designal);
+% y1fft = fft(Cleansignal);
+% y1Rfft = abs(y1fft)
+corruptsignalfft = abs(fft(corruptsignal));
+% subplot(2,1,1);plot(f(1:(N+1)/2),Signalfft(1:(N+1)/2));
 
 
-% sound(process5,fs);
-% sound(y1,fs);
-% audiowrite('processed1.m4a',X,fs);
-% audiowrite('processed2.m4a',process5,fs);
-% sound(process5,fs);
